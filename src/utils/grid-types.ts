@@ -9,3 +9,15 @@ export interface SolverSquare {
 }
 export type SolverRow = SolverSquare[];
 export type SolverGrid = SolverRow[];
+
+export interface SolverMiniGrids {
+  A: (number | null)[];
+  B: (number | null)[];
+  C: (number | null)[];
+  D: (number | null)[];
+  E: (number | null)[];
+  F: (number | null)[];
+  G: (number | null)[];
+  H: (number | null)[];
+  I: (number | null)[];
+}
