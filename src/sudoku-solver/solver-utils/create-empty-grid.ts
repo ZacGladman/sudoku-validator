@@ -15,7 +15,7 @@ export default function createEmptyGrid(): SolverGrid {
 
 console.log(createEmptyGrid());
 
-function locateMiniGrid(row: number, column: number): MiniGridLabel {
+export function locateMiniGrid(row: number, column: number): MiniGridLabel {
   if (row < 3) {
     if (column < 3) {
       return "A";
