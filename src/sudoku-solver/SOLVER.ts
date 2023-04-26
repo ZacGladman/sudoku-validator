@@ -2,6 +2,7 @@ import {
   IPossOccurrenceCount,
   MiniGridLabel,
   SolverGrid,
+  SolverMiniGrids,
 } from "../utils/grid-types";
 import missingNumsRows from "./preparation/rows/missingNumsRows";
 import columnsCreator from "./preparation/columns/columnsCreator";
@@ -29,41 +30,35 @@ export default function sudokuSolver(grid: SolverGrid): SolverGrid | false {
   // we ALSO need to check if a given number only appears as a possibility in that row/column/grid once.
 
   for (let row = 0; row < 9; row++) {
-    const possOccurrenceCount: IPossOccurrenceCount = {}; // to keep track of which squares each missing num can go into. If there's only one, it must go there.
+    const possOccurrenceCount: IPossOccurrenceCount = {};
+    /* to keep track of which squares each row's missing numbers can go into. If there's only one, it must go there. 
+      In this case, we know the row, so we just have to keep track of the column index */
     for (const num of rowsMissingNums[row]) {
       possOccurrenceCount[num] = [];
-    } // we add each missing number from that row as a key, whose values starts as an empty array.
+    } // we add each missing number from that row to the possOccurrenceCount object as a key, whose value starts as an empty array.
     for (let column = 0; column < 9; column++) {
       const whichGrid = locateMiniGrid(row, column);
       const possArray = possibilities[row][column]; // list of all possibilities for that square. It's either an array, or null.
       if (possArray) {
         // if not null (i.e. if an array, we look at what's inside...)
         if (possArray.length === 1) {
-          rowsMissingNums[row].splice(
-            rowsMissingNums[row].indexOf(possArray[0]),
-            1
-          ); // remove it from the list of its row's missing numbers (it has been added now!)
-          columnsMissingNums[column].splice(
-            columnsMissingNums[column].indexOf(possArray[0]),
-            1
-          ); // remove it from the list of its column's missing numbers (it has been added now!)
-          miniGridsMissingNums[whichGrid].splice(
-            miniGridsMissingNums[whichGrid].indexOf(possArray[0]),
-            1
-          ); // remove it from the list of its 3x3 grid's missing numbers (it has been added now!)
+          // if there's only one item in the array, then that number MUST go in this square. Therefore...
 
           possibilities[row][column] = null;
           /* the corresponding square in the possibilities grid (list of all possibilities for each square) becomes NULL - 
           there are no possible values, since it has been filled! */
           gridCopy[row][column].value = possArray[0];
-          /* the value of the corresponding square in the copy of the original grid (don't want to edit )*/
+          /* the value of the corresponding square in the copy of the original grid (don't want to edit) becomes this value */
 
           rmvNumFromRowAndColAndGrid(
             possArray[0],
             row,
             column,
             whichGrid,
-            possibilities
+            possibilities,
+            rowsMissingNums,
+            columnsMissingNums,
+            miniGridsMissingNums
           );
         } else {
           for (const num of possArray) {
@@ -74,14 +69,23 @@ export default function sudokuSolver(grid: SolverGrid): SolverGrid | false {
     }
     /* 
     Once we have checked every square, we look at the possOccurrenceCount object. If a value can only go in one square (i.e. if its array contains one column index),
-    then the square in that column and row MUST contain that value.
+    then the square at that column and row MUST contain that value.
     */
     for (const num of rowsMissingNums[row]) {
       if (possOccurrenceCount[num].length === 1) {
         const column = possOccurrenceCount[num][0];
         const whichGrid = locateMiniGrid(row, column);
 
-        rmvNumFromRowAndColAndGrid(num, row, column, whichGrid, possibilities);
+        rmvNumFromRowAndColAndGrid(
+          num,
+          row,
+          column,
+          whichGrid,
+          possibilities,
+          rowsMissingNums,
+          columnsMissingNums,
+          miniGridsMissingNums
+        );
 
         possibilities[row][column] = null;
         gridCopy[row][column].value = num;
@@ -120,7 +124,10 @@ function rmvNumFromRowAndColAndGrid(
   row: number,
   column: number,
   whichGrid: MiniGridLabel,
-  possibilities: (number[] | null)[][]
+  possibilities: (number[] | null)[][],
+  rowsMissingNums: number[][],
+  columnsMissingNums: (number | null)[][],
+  miniGridsMissingNums: SolverMiniGrids
 ): void {
   // loop through row, remove number from other squares' possibilities arrays
   rmvNumFromRowOrCol(numToRemove, row, possibilities, "r");
@@ -130,6 +137,16 @@ function rmvNumFromRowAndColAndGrid(
 
   // loop through 3x3 grid, do the same
   rmvNumFromGrid(numToRemove, whichGrid, possibilities);
+
+  rowsMissingNums[row].splice(rowsMissingNums[row].indexOf(numToRemove), 1); // remove it from the list of its row's missing numbers (it has been added now!)
+  columnsMissingNums[column].splice(
+    columnsMissingNums[column].indexOf(numToRemove),
+    1
+  ); // remove it from the list of its column's missing numbers (it has been added now!)
+  miniGridsMissingNums[whichGrid].splice(
+    miniGridsMissingNums[whichGrid].indexOf(numToRemove),
+    1
+  ); // remove it from the list of its mini grid's missing numbers (it has been added now!)
 }
 
 sudokuSolver(testGrid2);
