@@ -4,7 +4,7 @@ export type Row = Square[];
 
 export type MiniGridLabel = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I";
 export interface SolverSquare {
-  value: Square;
+  value: number | null;
   miniGrid: MiniGridLabel;
 }
 export type SolverRow = SolverSquare[];
@@ -20,4 +20,8 @@ export interface SolverMiniGrids {
   G: (number | null)[];
   H: (number | null)[];
   I: (number | null)[];
+}
+
+export interface IPossOccurrenceCount {
+  [num: number]: number[];
 }
