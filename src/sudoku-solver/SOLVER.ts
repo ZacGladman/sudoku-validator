@@ -92,8 +92,66 @@ export default function sudokuSolver(grid: SolverGrid): SolverGrid | false {
       }
     }
   }
-  console.log("UPDATED POSSIBILITIES", possibilities);
-  console.log("GRID", gridCopy);
+  console.log("UPDATED POSSIBILITIES AFTER ROWS CHECKED", possibilities);
+  console.log("NEW GRID", gridCopy);
+
+  // NOW WE DO THE SAME THING FOR THE COLUMNS, CHECKING FOR ONLY SOLUTIONS
+  console.log("columnsMissingNums: ", columnsMissingNums);
+  for (let column = 0; column < 9; column++) {
+    const possOccurrenceCount: IPossOccurrenceCount = {};
+    for (const num of columnsMissingNums[column]) {
+      if (num !== null) {
+        possOccurrenceCount[num] = [];
+      }
+    }
+    for (let row = 0; row < 9; row++) {
+      const whichGrid = locateMiniGrid(row, column);
+      const possArray = possibilities[row][column];
+      if (possArray) {
+        if (possArray.length === 1) {
+          possibilities[row][column] = null;
+          gridCopy[row][column].value = possArray[0];
+
+          rmvNumFromRowAndColAndGrid(
+            possArray[0],
+            row,
+            column,
+            whichGrid,
+            possibilities,
+            rowsMissingNums,
+            columnsMissingNums,
+            miniGridsMissingNums
+          );
+        } else {
+          for (const num of possArray) {
+            possOccurrenceCount[num] = [...possOccurrenceCount[num], row];
+          }
+        }
+      }
+    }
+
+    for (const num of columnsMissingNums[column]) {
+      if (num && possOccurrenceCount[num].length === 1) {
+        const row = possOccurrenceCount[num][0];
+        const whichGrid = locateMiniGrid(row, column);
+
+        rmvNumFromRowAndColAndGrid(
+          num,
+          row,
+          column,
+          whichGrid,
+          possibilities,
+          rowsMissingNums,
+          columnsMissingNums,
+          miniGridsMissingNums
+        );
+
+        possibilities[row][column] = null;
+        gridCopy[row][column].value = num;
+      }
+    }
+  }
+
   return false;
 }
 
