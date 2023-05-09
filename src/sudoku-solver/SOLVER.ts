@@ -24,14 +24,12 @@ export default function sudokuSolver(grid: SolverGrid): SolverGrid | false {
     miniGridsMissingNums
   );
 
-  console.log("POSSIBILITIES AT START", possibilities);
-
   // we are going to loop through the possibilities grid to check for squares with only one possible solution.
   // we ALSO need to check if a given number only appears as a possibility in that row/column/grid once.
 
   for (let row = 0; row < 9; row++) {
     const possOccurrenceCount: IPossOccurrenceCount = {};
-    /* to keep track of which squares each row's missing numbers can go into. If there's only one, it must go there. 
+    /* to keep track of which squares each row's missing numbers can go into. If there's only one possibility for a given number, it must go there. 
       In this case, we know the row, so we just have to keep track of the column index */
     for (const num of rowsMissingNums[row]) {
       possOccurrenceCount[num] = [];
@@ -152,6 +150,66 @@ export default function sudokuSolver(grid: SolverGrid): SolverGrid | false {
     }
   }
 
+  // NOW WE DO THE SAME THING FOR THE MINI GRIDS, CHECKING FOR ONLY SOLUTIONS
+  console.log("columnsMissingNums: ", columnsMissingNums);
+  for (let column = 0; column < 9; column++) {
+    const possOccurrenceCount: IPossOccurrenceCount = {};
+    for (const num of columnsMissingNums[column]) {
+      if (num !== null) {
+        possOccurrenceCount[num] = [];
+      }
+    }
+    for (let row = 0; row < 9; row++) {
+      const whichGrid = locateMiniGrid(row, column);
+      const possArray = possibilities[row][column];
+      if (possArray) {
+        if (possArray.length === 1) {
+          possibilities[row][column] = null;
+          gridCopy[row][column].value = possArray[0];
+
+          rmvNumFromRowAndColAndGrid(
+            possArray[0],
+            row,
+            column,
+            whichGrid,
+            possibilities,
+            rowsMissingNums,
+            columnsMissingNums,
+            miniGridsMissingNums
+          );
+        } else {
+          for (const num of possArray) {
+            possOccurrenceCount[num] = [...possOccurrenceCount[num], row];
+          }
+        }
+      }
+    }
+
+    for (const num of columnsMissingNums[column]) {
+      if (num && possOccurrenceCount[num].length === 1) {
+        const row = possOccurrenceCount[num][0];
+        const whichGrid = locateMiniGrid(row, column);
+
+        rmvNumFromRowAndColAndGrid(
+          num,
+          row,
+          column,
+          whichGrid,
+          possibilities,
+          rowsMissingNums,
+          columnsMissingNums,
+          miniGridsMissingNums
+        );
+
+        possibilities[row][column] = null;
+        gridCopy[row][column].value = num;
+      }
+    }
+  }
+
+  console.log("UPDATED POSSIBILITIES AFTER COLUMNS CHECKED", possibilities);
+  console.log("NEW GRID", gridCopy);
+  console.log("miniGridMissingNums: ", miniGridsMissingNums);
   return false;
 }
 
