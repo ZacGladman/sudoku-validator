@@ -11,6 +11,7 @@ import calculatePossibilities from "./preparation/possibilities/calculatePossibi
 import { testGrid2 } from "../utils/solver-test-grids";
 import { locateMiniGrid } from "./preparation/create-empty-grid";
 import rmvNumFromGrid from "./solver-utils/rmvNumFromGrid";
+import reverseLocateMiniGrid from "./solver-utils/reverseLocateMiniGrid";
 
 export default function sudokuSolver(grid: SolverGrid): SolverGrid | false {
   const gridCopy = [...grid]; // we make a copy of the original sudoku grid, as we don't want to change the original. We will add values to this copy and return it if solved.
@@ -151,60 +152,31 @@ export default function sudokuSolver(grid: SolverGrid): SolverGrid | false {
   }
 
   // NOW WE DO THE SAME THING FOR THE MINI GRIDS, CHECKING FOR ONLY SOLUTIONS
-  console.log("columnsMissingNums: ", columnsMissingNums);
-  for (let column = 0; column < 9; column++) {
+  console.log("miniGridsMissingNums: ", miniGridsMissingNums);
+  const gridsList: MiniGridLabel[] = [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+  ];
+  for (const grid of gridsList) {
     const possOccurrenceCount: IPossOccurrenceCount = {};
-    for (const num of columnsMissingNums[column]) {
+    const thisGridsMissingNums = getMiniGridMissingNums(
+      miniGridsMissingNums,
+      grid
+    );
+    for (const num of thisGridsMissingNums) {
       if (num !== null) {
         possOccurrenceCount[num] = [];
       }
     }
-    for (let row = 0; row < 9; row++) {
-      const whichGrid = locateMiniGrid(row, column);
-      const possArray = possibilities[row][column];
-      if (possArray) {
-        if (possArray.length === 1) {
-          possibilities[row][column] = null;
-          gridCopy[row][column].value = possArray[0];
-
-          rmvNumFromRowAndColAndGrid(
-            possArray[0],
-            row,
-            column,
-            whichGrid,
-            possibilities,
-            rowsMissingNums,
-            columnsMissingNums,
-            miniGridsMissingNums
-          );
-        } else {
-          for (const num of possArray) {
-            possOccurrenceCount[num] = [...possOccurrenceCount[num], row];
-          }
-        }
-      }
-    }
-
-    for (const num of columnsMissingNums[column]) {
-      if (num && possOccurrenceCount[num].length === 1) {
-        const row = possOccurrenceCount[num][0];
-        const whichGrid = locateMiniGrid(row, column);
-
-        rmvNumFromRowAndColAndGrid(
-          num,
-          row,
-          column,
-          whichGrid,
-          possibilities,
-          rowsMissingNums,
-          columnsMissingNums,
-          miniGridsMissingNums
-        );
-
-        possibilities[row][column] = null;
-        gridCopy[row][column].value = num;
-      }
-    }
+    const startingPoint = reverseLocateMiniGrid(grid);
+    console.log(`grid: ${grid}; starting point: ${startingPoint}`);
   }
 
   console.log("UPDATED POSSIBILITIES AFTER COLUMNS CHECKED", possibilities);
@@ -263,6 +235,31 @@ function rmvNumFromRowAndColAndGrid(
     miniGridsMissingNums[whichGrid].indexOf(numToRemove),
     1
   ); // remove it from the list of its mini grid's missing numbers (it has been added now!)
+}
+
+function getMiniGridMissingNums(
+  miniGridMissingNums: SolverMiniGrids,
+  grid: string
+): (number | null)[] {
+  if (grid === "A") {
+    return miniGridMissingNums["A"];
+  } else if (grid === "B") {
+    return miniGridMissingNums["B"];
+  } else if (grid === "C") {
+    return miniGridMissingNums["C"];
+  } else if (grid === "D") {
+    return miniGridMissingNums["D"];
+  } else if (grid === "E") {
+    return miniGridMissingNums["E"];
+  } else if (grid === "F") {
+    return miniGridMissingNums["F"];
+  } else if (grid === "G") {
+    return miniGridMissingNums["G"];
+  } else if (grid === "H") {
+    return miniGridMissingNums["H"];
+  } else {
+    return miniGridMissingNums["I"];
+  }
 }
 
 sudokuSolver(testGrid2);
